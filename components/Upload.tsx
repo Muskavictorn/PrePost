@@ -85,7 +85,8 @@ const Upload = ({ onComplete }: UploadProps) => {
     }
 
     const droppedFile = event.dataTransfer.files?.[0];
-    if (droppedFile) {
+    const allowedType = ['image/jpeg', 'image/png'];
+    if (droppedFile && allowedType.includes(droppedFile.type)) {
       processFile(droppedFile);
     }
   };
@@ -151,4 +152,3 @@ const Upload = ({ onComplete }: UploadProps) => {
 };
 
 export default Upload;
-  
