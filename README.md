@@ -24,6 +24,22 @@ Install the dependencies:
 npm install
 ```
 
+### Environment Variables
+
+This project requires environment variables to be configured before running. Follow these steps:
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. Update `.env.local` with your configuration values:
+   ```
+   VITE_PUTER_WORKER_URL=https://your-puter-instance.puter.work/
+   ```
+
+**Note:** The `.env.local` file is ignored by git and should never be committed to the repository. Each developer must create their own `.env.local` file with their specific values.
+
 ### Development
 
 Start the development server with HMR:
