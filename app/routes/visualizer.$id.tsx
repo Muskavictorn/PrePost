@@ -3,8 +3,11 @@ import { useNavigate, useOutletContext, useParams } from "react-router";
 import { generate3DView } from "../../lib/ai.action";
 import { Box, Download, RefreshCcw, Share2, X } from "lucide-react";
 import Button from "../../components/ui/Button";
-import { timeStamp } from "console";
 import { createProject, getProjectById } from "../../lib/puter.action";
+import {
+    ReactCompareSlider,
+    ReactCompareSliderImage,
+} from "react-compare-slider";
 
 const VisualizerId = () => {
     const { id } = useParams();
@@ -17,8 +20,7 @@ const VisualizerId = () => {
     const [isProjectLoading, setIsProjectLoading] = useState(true);
 
     const [isProcessing, setIsProcessing] = useState(false);
-    const [currentImage, setCurrentImage] = useState<string | null>(null
-    );
+    const [currentImage, setCurrentImage] = useState<string | null>(null);
 
     const handleBack = () => navigate("/");
 
@@ -42,12 +44,18 @@ const VisualizerId = () => {
                     timestamp: Date.now(),
                     ownerId: item.ownerId ?? userId ?? null,
                     isPublic: item.isPublic ?? false,
-                }
-                const saved = await createProject({ item: updatedItem, visibility: "private" })
+                };
+
+                const saved = await createProject({
+                    item: updatedItem,
+                    visibility: "private",
+                });
 
                 if (saved) {
                     setProject(saved);
-                    setCurrentImage(saved.renderedImage || result.renderedImage);
+                    setCurrentImage(
+                        saved.renderedImage || result.renderedImage
+                    );
                 }
             }
         } catch (e) {
@@ -55,6 +63,16 @@ const VisualizerId = () => {
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    const handleExport = async () => {
+        if (!currentImage) return;
+        const link = document.createElement('a');
+        link.href = currentImage;
+        link.download = `prepost-${id || 'design'}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     useEffect(() => {
@@ -90,8 +108,9 @@ const VisualizerId = () => {
             isProjectLoading ||
             hasInitialGenerated.current ||
             !project?.sourceImage
-        )
+        ) {
             return;
+        }
 
         if (project.renderedImage) {
             setCurrentImage(project.renderedImage);
@@ -102,6 +121,14 @@ const VisualizerId = () => {
         hasInitialGenerated.current = true;
         void runGeneration(project);
     }, [project, isProjectLoading]);
+
+    if (isProjectLoading) {
+        return (
+            <div className="visualizer-loading">
+                Loading project...
+            </div>
+        );
+    }
 
     return (
         <div className="visualizer">
@@ -127,14 +154,16 @@ const VisualizerId = () => {
                     <div className="panel-header">
                         <div className="panel-meta">
                             <p>Project</p>
-                            <h2>{project?.name || `Residense ${id}`}</h2>
+                            <h2>
+                                {project?.name || `Residence ${id}`}
+                            </h2>
                             <p className="note">Created by You</p>
                         </div>
 
                         <div className="panel-actions">
                             <Button
                                 size="sm"
-                                onClick={() => { }}
+                                onClick={handleExport}
                                 className="export"
                                 disabled={!currentImage}
                             >
@@ -168,7 +197,11 @@ const VisualizerId = () => {
                         ) : (
                             <div className="render-placeholder">
                                 {project?.sourceImage && (
-                                    <img src={project?.sourceImage} alt="Original" className="render-fallback" />
+                                    <img
+                                        src={project.sourceImage}
+                                        alt="Original"
+                                        className="render-fallback"
+                                    />
                                 )}
                             </div>
                         )}
@@ -177,9 +210,57 @@ const VisualizerId = () => {
                             <div className="render-overlay">
                                 <div className="rendering-card">
                                     <RefreshCcw className="spinner" />
-                                    <span className="subtitle">Generating visualization</span>
-
+                                    <span className="subtitle">
+                                        Generating visualization
+                                    </span>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="panel compare">
+                    <div className="panel-header">
+                        <div className="panel-meta">
+                            <p>Comparison</p>
+                            <h3>Before and After</h3>
+                        </div>
+
+                        <div className="hint">
+                            Drag to compare
+                        </div>
+                    </div>
+
+                    <div className="compare-stage">
+                        {project?.sourceImage && currentImage ? (
+                            <ReactCompareSlider
+                                defaultValue={50}
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                }}
+                                itemOne={
+                                    <ReactCompareSliderImage
+                                        src={project.sourceImage}
+                                        alt="Before"
+                                    />
+                                }
+                                itemTwo={
+                                    <ReactCompareSliderImage
+                                        src={currentImage}
+                                        alt="After"
+                                    />
+                                }
+                            />
+                        ) : (
+                            <div className="compare-fallback">
+                                {project?.sourceImage && (
+                                    <img
+                                        src={project.sourceImage}
+                                        alt="Before"
+                                        className="compare-img"
+                                    />
+                                )}
                             </div>
                         )}
                     </div>
